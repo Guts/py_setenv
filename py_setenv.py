@@ -79,7 +79,8 @@ def set_variable(name, value, user):
         with winreg.OpenKey(*hkey, access=winreg.KEY_WRITE) as key:
             winreg.SetValueEx(key, name, 0, winreg.REG_SZ, value)
         return True
-    except WindowsError:
+    except OSError as err:
+        click.echo(f"Set variable '{name}' with value '{value}' failed. Trace: {err}")
         return False
 
 
@@ -106,8 +107,8 @@ def get_variable(name, user):
         with winreg.OpenKey(*hkey, access=winreg.KEY_READ) as key:
             value, regtype = winreg.QueryValueEx(key, name)
         return value
-    except WindowsError:
-        click.echo("Environment Variable '{}' does not exist".format(name))
+    except OSError as err:
+        click.echo(f"Environment variable '{name}' does not exist. Trace: {err}")
         return ""
 
 def delete_variable(name, user):
@@ -119,7 +120,8 @@ def delete_variable(name, user):
         with winreg.OpenKey(*hkey, access=winreg.KEY_ALL_ACCESS) as key:
             winreg.DeleteValue(key, name)
             return True
-    except WindowsError:
+    except OSError as err:
+        click.echo(f"Delete variable '{name}' failed. Trace: {err}")
         return False
 
 def list_all_variables(user):
@@ -130,7 +132,7 @@ def list_all_variables(user):
             for i in range(winreg.QueryInfoKey(key)[1]):
                 var, val, var_type = winreg.EnumValue(key, i)
                 all_vars[var] = val
-    except WindowsError:
+    except OSError:
         pass
 
     return all_vars
